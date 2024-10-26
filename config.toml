@@ -1,0 +1,19 @@
+[color]
+  bg = "black" # none for transparent
+  fg = "white"
+  important = 'magenta'
+  error = 'red'
+  warning = 'yellow'
+  info = 'cyan'
+[color.type]
+  folder = 'blue'
+  executable = 'green'
+  archives = 'red'
+  images = 'magenta'
+  audio = 'cyan'
+  video = 'magenta'
+[color.type.mappings]
+  '.md' = 'cyan'
+[layout]
+  leftPanel = 0.2
+  rightPanel = 0.5
