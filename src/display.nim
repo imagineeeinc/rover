@@ -1,9 +1,6 @@
-import std/[os], strutils, math
+import std/[os, osproc], strutils, math
 import illwill
-proc exitProc*() {.noconv.} =
-  illwillDeinit()
-  showCursor()
-  quit(0)
+import config, global
 
 illwillInit(fullscreen=true)
 setControlCHook(exitProc)
@@ -16,6 +13,7 @@ let leftWidth = int floor float(terminalWidth())*leftPanelSize
 let midWidth = int floor float(terminalWidth())*((1-rightPanelSize)*(1-leftPanelSize))
 let rightWidth = int floor float(terminalWidth())*(rightPanelSize*(1-leftPanelSize))
 
+let offset: int = if globalConfig.layout.cursor == "center": int floor (terminalHeight()-4)/2 elif globalConfig.layout.cursor == "top-padded": 3 else: 2
 proc drawBoxes*() =  
   tb.drawRect(0, 1, leftWidth, terminalHeight()-2)
   tb.drawRect(leftWidth+1, 1, leftWidth+midWidth, terminalHeight()-2)
@@ -24,7 +22,7 @@ proc drawBoxes*() =
 var lastDir: string = ""
 proc drawWorkingDir*(dir: string) =
     if dir != lastDir:
-      tb.write(1, 0, fgNone, repeat(" ", terminalWidth()))
+      tb.write(1, 0, resetStyle, fgNone, repeat(" ", terminalWidth()))
       tb.write(1, 0, fgMagenta, dir)
       lastDir = dir
 
@@ -36,10 +34,9 @@ proc drawFilesLeft*(files: seq[tuple[kind: PathComponent, path: string]], workin
     tb.setBackgroundColor(bgNone)
     tb.fill(1,2, leftWidth-1, terminalHeight()-3, " ")
     for file in files:
-      if file.kind == pcFile:
-        tb.write(1, i+2, resetStyle, fgWhite, extractFilename(file.path))
-      elif file.kind == pcDir:
-        tb.write(1, i+2, resetStyle, fgWhite, extractFilename(file.path) & "/")
+      var text = if file.kind == pcFile: extractFilename(file.path) else: extractFilename(file.path) & "/"
+      text = if text.len > leftWidth-2: text[0..leftWidth-5] & "..." else: text
+      tb.write(1, i+2, resetStyle, fgNone, text)
       i+=1
       if i >= terminalHeight()-4:
         break
@@ -54,14 +51,26 @@ proc drawFilesMid*(files: seq[tuple[kind: PathComponent, path: string]], working
     tb.setBackgroundColor(bgNone)
     tb.fill(leftWidth+2,2, leftWidth+midWidth-1, terminalHeight()-3, " ")
     for file in files:
+      if i+offset-cursorY < 2:
+        i+=1
+        continue
       let fg = if i == cursorY: fgCyan else: fgWhite
       let bg = if i == cursorY: bgWhite else: bgNone
-      if file.kind == pcFile:
-        tb.write(leftWidth+2, i+2, resetStyle, fg, bg, extractFilename(file.path))
-      elif file.kind == pcDir:
-        tb.write(leftWidth+2, i+2, resetStyle, fg, bg, extractFilename(file.path) & "/")
+      var text = if file.kind == pcFile: extractFilename(file.path) else: extractFilename(file.path) & "/"
+      text = if text.len > midWidth-2: text[0..midWidth-5] & "..." else: text
+      tb.write(
+        leftWidth+2,
+        i+offset-cursorY,
+        resetStyle,
+        fg, bg,
+        text
+      )
       i+=1
-      if i >= terminalHeight()-4:
+      if i-cursorY >= terminalHeight()-2-offset:
         break
+      
     lastMidDir = workingDir
     lastY = cursorY
+proc drawRightPanel*(file: global.File) =
+  if file.path.endsWith(".jpg") or file.path.endsWith(".png"):
+    discard

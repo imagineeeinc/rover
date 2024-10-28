@@ -22,6 +22,7 @@ when isMainModule:
     drawWorkingDir(workingDir)
     drawFilesLeft(parentFiles, parentWorkingDir)
     drawFilesMid(files, workingDir, cursorY)
+    drawRightPanel(files[cursorY])
     # Input
     var key = getKey()
     try:

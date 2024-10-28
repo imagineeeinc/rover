@@ -1,11 +1,10 @@
 import std/[os, distros], sequtils, strutils
-import display
+import global
 
-type File = seq[tuple[kind: PathComponent, path: string]]
 var workingDir*: string
-var files*: File = @[]
+var files*: Files = @[]
 var parentWorkingDir*: string
-var parentFiles*: File = @[]
+var parentFiles*: Files = @[]
 proc execute*(text: string): bool =
   if text.startsWith("cd "):
     var dir = text[3..text.len-1]
