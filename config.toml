@@ -18,10 +18,13 @@
 [layout]
   leftPanel = 0.2
   rightPanel = 0.5
-  cursorAlign = 'center' # top, top-padded, center
+  cursor = 'center' # top, top-padded, center
 [preview]
   text = 'cat'
   image = 'chafa'
   audio = 'ffplay'
   video = 'ffplay'
 
+mappings = [
+  {name = 'images', files = [".png", ".jpg", ".jpeg", ".gif", ".svg", ".tiff"]},
+]

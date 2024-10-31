@@ -1,6 +1,6 @@
 import std/[os], strutils
 import illwill
-import config, display, runtime
+import config, display, runtime, global
 
 discard importConfig("config.toml")
 tb.setForegroundColor(fgBlack, true)
@@ -58,11 +58,14 @@ when isMainModule:
         tb.write(0, terminalHeight()-1, fgNone, repeat(" ", len(status)+2))
         status = ""
       elif statusLine == true:
-        tb.write(cursorX, terminalHeight()-1, fgWhite, $inputed)
+        tb.write(cursorX, terminalHeight()-1, resetStyle, fgWhite, $inputed)
         cursorX+=1
         status = status & $inputed
+      else:
+        if key == Key.Q:
+          exitProc()
       if statusLine == true:
-        tb.write(cursorX, terminalHeight()-1, fgWhite, "█")
+        tb.write(cursorX, terminalHeight()-1, resetStyle, fgWhite, "█")
     except:
       discard
     tb.setCursorPos(0, terminalHeight()-1)

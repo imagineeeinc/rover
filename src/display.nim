@@ -1,4 +1,4 @@
-import std/[os, osproc], strutils, math
+import std/[os], strutils, math
 import illwill
 import config, global
 
@@ -29,19 +29,21 @@ proc drawWorkingDir*(dir: string) =
 var lastLeftDir: string = ""
 proc drawFilesLeft*(files: seq[tuple[kind: PathComponent, path: string]], workingDir: string) =
   if workingDir != lastLeftDir:
-    var i = 0
-    tb.setForegroundColor(fgNone)
-    tb.setBackgroundColor(bgNone)
-    tb.fill(1,2, leftWidth-1, terminalHeight()-3, " ")
-    for file in files:
-      var text = if file.kind == pcFile: extractFilename(file.path) else: extractFilename(file.path) & "/"
-      text = if text.len > leftWidth-2: text[0..leftWidth-5] & "..." else: text
-      tb.write(1, i+2, resetStyle, fgNone, text)
-      i+=1
-      if i >= terminalHeight()-4:
-        break
-    lastLeftDir = workingDir
-
+    if workingDir != "ThisPc" and workingDir != "":
+      var i = 0
+      tb.setForegroundColor(fgNone)
+      tb.setBackgroundColor(bgNone)
+      tb.fill(1,2, leftWidth-1, terminalHeight()-3, " ")
+      for file in files:
+        var text = if file.kind == pcFile: extractFilename(file.path) else: extractFilename(file.path) & "/"
+        text = if text.len > leftWidth-2: text[0..leftWidth-5] & "..." else: text
+        tb.write(1, i+2, resetStyle, fgNone, text)
+        i+=1
+        if i >= terminalHeight()-4:
+          break
+      lastLeftDir = workingDir
+    else:
+      discard
 var lastMidDir: string = ""
 var lastY: int = -1
 proc drawFilesMid*(files: seq[tuple[kind: PathComponent, path: string]], workingDir: string, cursorY: int) =
@@ -54,8 +56,19 @@ proc drawFilesMid*(files: seq[tuple[kind: PathComponent, path: string]], working
       if i+offset-cursorY < 2:
         i+=1
         continue
-      let fg = if i == cursorY: fgCyan else: fgWhite
-      let bg = if i == cursorY: bgWhite else: bgNone
+      var color: string = ""
+      if file.kind == pcDir:
+        color = globalConfig.colors.colorType.folder
+      elif file.path.endsWith(".exe") or file.path.endsWith(".bat") or file.path.endsWith(".cmd") or file.path.endsWith(".sh"):
+        color = globalConfig.colors.colorType.executable
+      # TODO: Remove hardcoded file types
+      elif file.path.endsWith(".jpg") or file.path.endsWith(".png") or file.path.endsWith(".gif"):
+        color = globalConfig.colors.colorType.images
+      else:
+        color = "white"
+      var fg: ForegroundColor = if i == cursorY: fgBlack else: matchColorFg(color)
+
+      let bg: BackgroundColor = if i == cursorY: matchColorBg(color) else: bgNone
       var text = if file.kind == pcFile: extractFilename(file.path) else: extractFilename(file.path) & "/"
       text = if text.len > midWidth-2: text[0..midWidth-5] & "..." else: text
       tb.write(

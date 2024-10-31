@@ -1,4 +1,4 @@
-import std/[os, distros], sequtils, strutils
+import std/[os, distros, algorithm], sequtils, strutils
 import global
 
 var workingDir*: string
@@ -26,8 +26,17 @@ proc execute*(text: string): bool =
     if dirExists dir:
       workingDir = dir
       files = toSeq(walkDir(workingDir))
-      parentWorkingDir = workingDir.parentDir()
-      parentFiles = toSeq(walkDir(workingDir.parentDir()))
+      files = files.sortedByIt(it.kind == pcFile)
+      if isRootDir(workingDir):
+        if detectOs(Windows):
+          parentWorkingDir = "ThisPC"
+        else:
+          parentWorkingDir = ""
+        parentFiles = @[]
+      else:
+        parentWorkingDir = workingDir.parentDir()
+        parentFiles = toSeq(walkDir(workingDir.parentDir()))
+        parentFiles = parentFiles.sortedByIt(it.kind == pcFile)
       return true
     else:
       return false
